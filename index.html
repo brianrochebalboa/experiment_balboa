@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experiment Balboa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- =====================================================================
+     1. PENDO INSTALL (Balboa sandbox app)
+     Loader only. pendo.initialize() runs in the app script below:
+     anonymous on page load, then identify() when the visitor signs in.
+     ===================================================================== -->
+<script>
+(function(publicAppId){
+    (function(p,e,n,d,o){var v,w,x,y,z;o=p[d]=p[d]||{};o._q=o._q||[];
+    v=['initialize','identify','updateOptions','pageLoad','track','trackAgent'];for(w=0,x=v.length;w<x;++w)(function(m){
+        o[m]=o[m]||function(){o._q[m===v[0]?'unshift':'push']([m].concat([].slice.call(arguments,0)));};})(v[w]);
+        y=e.createElement(n);y.async=!0;y.src='https://cdn.pendo.io/agent/static/'+publicAppId+'/pendo.js';
+        z=e.getElementsByTagName(n)[0];z.parentNode.insertBefore(y,z);})(window,document,'script','pendo');
+})('036ed65f-4a54-4885-8ed5-5a8dcdfc2c90');
+</script>
+
+<style>
+  :root{
+    --ink:#171717; --purple:#6D2FAE; --purple-dark:#55228A; --purple-tint:#F3EDFA; --purple-soft:#E4D6F4;
+    --green:#098048; --blue:#2073A5; --orange:#D07628; --red:#AA272C;
+    --bg:#F7F7F7; --white:#FFFFFF; --line:#E3E3E3; --muted:#555555;
+    --font:"Avenir Next LT Pro","Avenir Next","Avenir","Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);font-size:16px;line-height:1.5}
+  a{color:inherit}
+  button,select,input{font-family:inherit}
+
+  /* ---------- top nav ---------- */
+  .topnav{position:sticky;top:0;z-index:30;height:76px;display:flex;align-items:center;gap:18px;padding:0 24px;background:var(--white);border-bottom:1px solid var(--line)}
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;background:none;border:0;padding:8px;border-radius:8px;cursor:pointer;color:var(--ink)}
+  .icon-btn:hover{background:var(--purple-tint)}
+  .brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);min-width:0}
+  .brand img{height:28px;width:auto;display:block}
+  .brand .divider{width:1px;height:26px;background:var(--line)}
+  .brand-title{font-size:24px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+  .brand-title b{color:var(--purple);font-weight:700}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .nav-link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:17px;background:none;border:0;cursor:pointer;color:var(--ink)}
+  .nav-link:hover{background:var(--purple-tint)}
+  .account{position:relative}
+  .account-panel{position:absolute;right:0;top:calc(100% + 8px);width:280px;background:var(--white);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);padding:8px;display:none}
+  .account-panel.open{display:block}
+  .account-panel .who{padding:10px 12px;font-weight:700;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .account-panel .who small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+  .menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:none;border-radius:8px;cursor:pointer;text-align:left;font-size:15px;color:var(--ink);text-decoration:none}
+  .menu-item:hover{background:var(--purple-tint)}
+
+  /* ---------- layout ---------- */
+  .layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 76px)}
+  .layout.collapsed{grid-template-columns:0 1fr}
+  .sidenav{background:var(--white);border-right:1px solid var(--line);overflow:hidden}
+  .sidenav ul{list-style:none;margin:0;padding:8px 0}
+  .side-link{display:flex;align-items:center;gap:12px;margin:0 0 4px;padding:14px 18px;text-decoration:none;font-size:18px;color:var(--ink);border-left:4px solid transparent}
+  .side-link:hover{background:var(--purple-tint)}
+  .side-link.active{background:var(--purple-tint);color:var(--purple);border-left-color:var(--purple);font-weight:600}
+  main{min-width:0;display:flex;flex-direction:column}
+  .page-head{background:var(--white);padding:28px 32px 26px}
+  .page-head h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-.5px}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#EFE6FA 0%,#F6F1FC 100%);padding:56px 32px 120px}
+  .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:start;max-width:1200px;margin:0 auto}
+  .greet h2{margin:0;font-size:21px;display:flex;align-items:center;gap:10px}
+  .greet p{margin:4px 0 0;font-size:18px;color:#333}
+  .edit-btn{background:none;border:0;cursor:pointer;padding:4px;border-radius:6px;color:var(--ink)}
+  .edit-btn:hover{background:var(--purple-soft)}
+  .access{text-align:center}
+  .access h2{margin:0;font-size:28px;font-weight:700}
+  .access p{margin:4px 0 18px;font-size:19px;color:#333}
+  .picker{display:flex;max-width:940px;margin:0 auto;background:var(--white);border:1px solid #9C9C9C;border-radius:4px;text-align:left}
+  .picker select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font-size:17px;padding:16px 44px 16px 16px;color:var(--ink);cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3E%3Cpath d='M0 0h14L7 8z' fill='%23171717'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+  .picker select:focus{outline:2px solid var(--purple);outline-offset:-2px}
+  #account-type-select{width:180px;border-right:1px solid #9C9C9C}
+  #account-select{flex:1;min-width:0}
+  .hero-art{position:absolute;inset:auto 0 0 0;z-index:0;pointer-events:none}
+  .hero-art svg{display:block;width:100%;height:120px}
+  .hero-badge-left,.hero-badge-right{position:absolute;bottom:18px;z-index:1}
+  .hero-badge-left{left:40px}
+  .hero-badge-right{right:40px}
+
+  /* ---------- resources ---------- */
+  .resources{padding:70px 32px 40px;text-align:center}
+  .resources h3{margin:0;font-size:20px;font-weight:700}
+  .resources > p{margin:4px 0 36px;font-size:18px;color:#333}
+  .card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;max-width:1400px;margin:0 auto;text-align:left}
+
+  footer{margin-top:auto;padding:40px 24px 56px;text-align:center;font-size:17px;color:#333}
+  footer p{margin:0 0 10px}
+  footer .note{font-size:13px;color:var(--muted);margin-top:14px}
+
+  /* ---------- toast + modal ---------- */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-size:15px;opacity:0;transition:.25s;z-index:60;max-width:calc(100% - 32px)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  dialog{border:0;border-radius:14px;padding:0;width:min(460px,calc(100% - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  dialog::backdrop{background:rgba(23,23,23,.55)}
+  .modal-head{background:var(--purple);color:#fff;padding:22px 26px}
+  .modal-head h2{margin:0;font-size:22px}
+  .modal-head p{margin:4px 0 0;font-size:14px;opacity:.9}
+  .modal-body{padding:22px 26px 6px;display:grid;gap:14px}
+  .modal-body label{display:grid;gap:6px;font-size:14px;font-weight:600}
+  .modal-body input,.modal-body select{font-size:16px;padding:11px 12px;border:1px solid #BDBDBD;border-radius:6px;background:#fff;color:var(--ink)}
+  .modal-body input:focus,.modal-body select:focus{outline:2px solid var(--purple);outline-offset:0;border-color:var(--purple)}
+  .modal-body .hint{font-size:13px;color:var(--muted);font-weight:400}
+  .modal-foot{padding:18px 26px 24px;display:flex;justify-content:flex-end}
+  .btn{background:var(--purple);color:#fff;border:0;border-radius:6px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer}
+  .btn:hover{background:var(--purple-dark)}
+
+  @media (max-width:1100px){ .card-grid{grid-template-columns:1fr 1fr} }
+  @media (max-width:820px){
+    .layout{grid-template-columns:0 1fr}
+    .layout.mobile-open{grid-template-columns:240px 1fr}
+    .hero-grid{grid-template-columns:1fr;text-align:center}
+    .greet h2{justify-content:center}
+    .picker{flex-direction:column}
+    #account-type-select{width:100%;border-right:0;border-bottom:1px solid #9C9C9C}
+    .card-grid{grid-template-columns:1fr}
+    .brand .divider,.brand-title{display:none}
+    .nav-link .label{display:none}
+    .page-head,.hero,.resources{padding-left:16px;padding-right:16px}
+    .hero-badge-left,.hero-badge-right{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== TOP NAV ===================== -->
+<header class="topnav">
+  <button class="icon-btn" id="menu-toggle" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h12M3 12h18M3 18h12"/></svg>
+  </button>
+  <a class="brand" href="#home" id="brand-home">
+    <img id="balboa-logo" src="https://www.engagebalboa.com/assets/logos/Balboa%20Logo%20-%20BlackPurple.svg" alt="Balboa"
+         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'brand-title',innerHTML:'<b>Balboa</b>'}))">
+    <span class="divider" aria-hidden="true"></span>
+    <span class="brand-title">Experiment <b>Balboa</b></span>
+  </a>
+  <nav class="nav-right">
+    <a class="nav-link" id="help-link" href="https://www.engagebalboa.com/" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4.1" stroke-linecap="round"/><circle cx="12" cy="17.6" r=".9" fill="currentColor" stroke="none"/></svg>
+      <span class="label">Help</span>
+    </a>
+    <div class="account">
+      <button class="nav-link" id="account-toggle" aria-haspopup="true" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7.5" r="4.5"/><path d="M3.5 21.5a8.5 8.5 0 0 1 17 0" stroke-linecap="round"/></svg>
+        <span class="label">Account</span>
+      </button>
+      <div class="account-panel" id="account-panel" role="menu">
+        <div class="who"><span id="panel-name">Guest</span><small id="panel-id">Not signed in</small></div>
+        <button class="menu-item" id="manage-profile" role="menuitem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7.5" r="4.5"/><path d="M3.5 21.5a8.5 8.5 0 0 1 17 0" stroke-linecap="round"/></svg>
+          Manage profile and account
+        </button>
+        <button class="menu-item" id="log-out" role="menuitem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+          Log out
+        </button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="layout" id="layout">
+  <!-- ===================== SIDE NAV ===================== -->
+  <aside class="sidenav" id="sidenav">
+    <ul>
+      <li>
+        <a class="side-link active" href="#home" id="nav-home">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3S5.8 8.3 2.4 11.2c-.2.2-.4.5-.4.8 0 .6.4 1 1 1h2v7c0 .6.4 1 1 1h3c.6 0 1-.4 1-1v-4h4v4c0 .6.4 1 1 1h3c.6 0 1-.4 1-1v-7h2c.6 0 1-.4 1-1 0-.3-.2-.6-.4-.8C18.2 8.3 12 3 12 3z"/></svg>
+          Your home
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main id="main">
+    <div class="page-head"><h1>Your Home</h1></div>
+
+    <section class="hero" aria-label="Account access">
+      <div class="hero-grid">
+        <div class="greet">
+          <h2>Hi, <span id="greet-name">there</span>
+            <button class="edit-btn" id="edit-profile" aria-label="Edit profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/><path d="M14.5 6.5l3 3"/></svg>
+            </button>
+          </h2>
+          <p>User since 2026</p>
+        </div>
+        <div class="access">
+          <h2>Manage your account access</h2>
+          <p>Manage access across organizations linked to your login credentials</p>
+          <div class="picker">
+            <select id="account-type-select" aria-label="Account type"></select>
+            <select id="account-select" aria-label="Select an account"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path d="M0 80 L200 50 L380 78 L560 30 L760 70 L940 40 L1120 72 L1300 46 L1440 64 V120 H0 Z" fill="#E4D6F4"/>
+          <path d="M0 100 L240 84 L470 104 L700 86 L930 104 L1180 88 L1440 100 V120 H0 Z" fill="#D9C6EF"/>
+        </svg>
+      </div>
+      <div class="hero-badge-left" aria-hidden="true">
+        <svg width="120" height="96" viewBox="0 0 120 96">
+          <rect x="8" y="4" width="62" height="88" rx="8" fill="#171717"/>
+          <rect x="14" y="12" width="50" height="72" rx="3" fill="#fff"/>
+          <rect x="20" y="20" width="38" height="8" rx="2" fill="#6D2FAE"/>
+          <rect x="20" y="34" width="30" height="6" rx="2" fill="#E4D6F4"/>
+          <rect x="20" y="46" width="34" height="6" rx="2" fill="#E4D6F4"/>
+          <rect x="20" y="58" width="26" height="6" rx="2" fill="#E4D6F4"/>
+          <circle cx="94" cy="60" r="18" fill="#D07628"/>
+          <path d="M86 60l6 6 10-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="hero-badge-right" aria-hidden="true">
+        <svg width="130" height="90" viewBox="0 0 130 90">
+          <rect x="6" y="56" width="18" height="30" rx="3" fill="#2073A5"/>
+          <rect x="32" y="38" width="18" height="48" rx="3" fill="#098048"/>
+          <rect x="58" y="20" width="18" height="66" rx="3" fill="#6D2FAE"/>
+          <rect x="84" y="6" width="18" height="80" rx="3" fill="#171717"/>
+          <path d="M8 46 L40 28 L66 12 L104 2" stroke="#D07628" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="resources" id="resources">
+      <h3>Need more information about Experiment Balboa?</h3>
+      <p>Get started with these access and account management resources.</p>
+      <div class="card-grid" id="card-grid"></div>
+    </section>
+
+    <footer>
+      <p>© 2026 Balboa. All rights reserved.</p>
+      <p><a href="#privacy" id="privacy-link">Privacy</a> and <a href="#terms" id="terms-link">Terms</a></p>
+      <p class="note">Experiment Balboa is a Balboa training sandbox for Pendo track events. Not a real product.</p>
+    </footer>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ===================== SIGN-IN MODAL ===================== -->
+<dialog id="signin">
+  <form method="dialog" id="signin-form">
+    <div class="modal-head">
+      <h2>Sign in to Experiment Balboa</h2>
+      <p>Your name becomes your Pendo visitor ID, so each teammate's events stay separate.</p>
+    </div>
+    <div class="modal-body">
+      <label>Full name
+        <input id="f-name" required autocomplete="name" placeholder="e.g. Brian Roche">
+        <span class="hint">Visitor ID: <code id="f-preview">balboa-</code></span>
+      </label>
+      <label>Role
+        <select id="f-role">
+          <option value="Internal">Internal (Balboa)</option>
+          <option value="External">External (client)</option>
+        </select>
+      </label>
+      <label>Account type
+        <select id="f-type"></select>
+      </label>
+      <label>Account
+        <select id="f-account"></select>
+      </label>
+    </div>
+    <div class="modal-foot"><button class="btn" id="signin-submit" value="ok">Sign in</button></div>
+  </form>
+</dialog>
+
+<!-- =====================================================================
+     2. APP SHELL (you shouldn't need to edit this)
+     ===================================================================== -->
+<script>
+  // ---- fictional accounts ----
+  const ACCOUNTS = {
+    Partner:    [{ id:'eb-partner-001', name:'Harbor Analytics' }, { id:'eb-partner-002', name:'Summit Product Co.' }],
+    Advertiser: [{ id:'eb-adv-101', name:'Northwind Outfitters' }, { id:'eb-adv-102', name:'Bluewater Foods' }],
+    Agency:     [{ id:'eb-agency-201', name:'Lantern Media Group' }]
+  };
+
+  // ---- resource cards (data-* attributes mirror a client CMS) ----
+  const CARDS = [
+    { title:'Getting started with Experiment Balboa', body:'Dive into the basics like account creation, user management and more.', cta:'Learn more',
+      link:'#getting-started', linkType:'Link inside app', icon:'flask', tint:'#FBEBDD', color:'#D07628' },
+    { title:'Access and authorization', body:'Learn more about user roles, access levels, and how to enable APIs.', cta:'Learn more',
+      link:'#access-and-authorization', linkType:'Link inside app', icon:'key', tint:'#E2EEF6', color:'#2073A5' },
+    // Deliberately long tracking URL: if you send it as a track property the payload goes over Pendo's size limit.
+    { title:'Become a Balboa partner', body:'Get access to the resources you need to successfully partner with Balboa.', cta:'Get started',
+      link:'https://www.engagebalboa.com/?utm_source=experiment-balboa&utm_medium=resource_card&utm_campaign=partner_program&session_token=' + 'aB3dE5fG7hJ9kL1mN2pQ4rS6tU8vW0xY'.repeat(12),
+      linkType:'Link outside of app', icon:'handshake', tint:'#F3EDFA', color:'#6D2FAE' }
+  ];
+
+  const ICONS = {
+    flask:'<path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21.5h11.6a2 2 0 0 0 1.7-3L14 9V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 15h10" stroke="currentColor" stroke-width="1.8"/>',
+    key:'<circle cx="8" cy="15" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11.2 11.8L20 3M16 7l2.5 2.5M18.5 4.5L21 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    handshake:'<path d="M2 11l4-4 4 2 3-2 4 1 5 4M2 11l5 5 2-1 2 2 2-1 2 2 2-1 2 1 3-4M9 9l-2 3a1.5 1.5 0 0 0 2.4 1.8l2.1-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
+  };
+
+  // ---- <eb-button>: a button inside its own shadow root (like a Salesforce lightning-button) ----
+  class EbButton extends HTMLElement {
+    connectedCallback(){
+      if (this.shadowRoot) return;
+      const root = this.attachShadow({ mode:'open' });
+      root.innerHTML = `
+        <style>
+          button{font:inherit;font-weight:700;font-size:16px;background:none;border:0;padding:0;color:#171717;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+          button:hover{color:#6D2FAE}
+          button:focus-visible{outline:2px solid #6D2FAE;outline-offset:3px;border-radius:2px}
+        </style>
+        <button type="button" part="button" class="eb-button"><slot></slot></button>`;
+    }
+  }
+  customElements.define('eb-button', EbButton);
+
+  // ---- <eb-resource-card>: card content inside a second shadow root ----
+  class EbResourceCard extends HTMLElement {
+    connectedCallback(){
+      if (this.shadowRoot) return;
+      const c = this._card;
+      const root = this.attachShadow({ mode:'open' });
+      root.innerHTML = `
+        <style>
+          :host{display:block}
+          .card{display:flex;gap:22px;height:100%;background:#fff;border:1px solid #E3E3E3;border-radius:10px;padding:26px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+          .icon{flex:0 0 120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+          h4{margin:0 0 6px;font-size:19px;line-height:1.35}
+          p{margin:0 0 18px;font-size:17px;line-height:1.55;color:#333}
+          @media (max-width:520px){.card{flex-direction:column}.icon{flex-basis:auto;width:96px;height:96px}}
+        </style>
+        <div class="card">
+          <div class="icon" style="background:${c.tint};color:${c.color}">
+            <svg width="54" height="54" viewBox="0 0 24 24">${ICONS[c.icon]}</svg>
+          </div>
+          <div class="content">
+            <h4 class="card-title">${c.title}</h4>
+            <p class="card-text">${c.body}</p>
+          </div>
+        </div>`;
+      const btn = document.createElement('eb-button');
+      btn.className = 'read-more';
+      btn.dataset.cardTitle = c.title;
+      btn.dataset.link = c.link;
+      btn.dataset.linkType = c.linkType;
+      btn.textContent = c.cta;
+      btn.addEventListener('click', (event) => {
+        if (typeof window.handleReadMore === 'function') window.handleReadMore(event);
+      });
+      root.querySelector('.content').appendChild(btn);
+    }
+  }
+  customElements.define('eb-resource-card', EbResourceCard);
+
+  // ---- helpers ----
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(){ try { return JSON.parse(localStorage.getItem('eb-user')); } catch(e){ return null; } },
+    set(v){ try { localStorage.setItem('eb-user', JSON.stringify(v)); } catch(e){} },
+    clear(){ try { localStorage.removeItem('eb-user'); } catch(e){} }
+  };
+  const slug = (s) => 'balboa-' + (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const findAccount = (type, id) => (ACCOUNTS[type] || []).find(a => a.id === id) || (ACCOUNTS[type] || [])[0];
+
+  function toast(msg){
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // Logs every event with its payload size, then sends it to Pendo.
+  window.balboaTrack = function(name, props){
+    const bytes = new Blob([JSON.stringify(props || {})]).size;
+    console.log('%c[track] ' + name, 'color:#6D2FAE;font-weight:700', props, '| ' + bytes + ' bytes');
+    if (bytes > 500) console.warn('[track] "' + name + '" properties are ' + bytes + ' bytes. Pendo may reject this ("event properties JSON too large").');
+    if (window.pendo && typeof window.pendo.track === 'function') window.pendo.track(name, props);
+    else console.warn('[track] Pendo is not loaded.');
+  };
+
+  function fillSelect(sel, items, value){
+    sel.innerHTML = items.map(i => `<option value="${i.value}">${i.label}</option>`).join('');
+    if (value) sel.value = value;
+  }
+  const typeOptions = Object.keys(ACCOUNTS).map(t => ({ value:t, label:t }));
+  const accountOptions = (type) => (ACCOUNTS[type] || []).map(a => ({ value:a.id, label:a.name }));
+
+  // ---- Pendo identity ----
+  let user = store.get();
+  let pendoStarted = false;
+
+  function pendoIdentity(){
+    const acct = findAccount(user.accountType, user.accountId);
+    return {
+      visitor: { id:user.visitorId, full_name:user.name, role:user.role, app_name:'Experiment Balboa' },
+      account: { id:acct.id, name:acct.name, account_type:user.accountType }
+    };
+  }
+  // No user yet: initialize anonymously (Pendo assigns a _PENDO_T_ cookie ID).
+  // Signed in: initialize with identity, or identify() to upgrade the anonymous visitor.
+  function syncPendo(){
+    if (!window.pendo) return;
+    if (!pendoStarted){
+      window.pendo.initialize(user ? pendoIdentity() : { visitor:{ id:'' }, account:{ id:'' } });
+      pendoStarted = true;
+    } else if (user) {
+      window.pendo.identify(pendoIdentity());
+    }
+  }
+
+  // ---- render ----
+  function renderUser(){
+    $('greet-name').textContent = user ? user.name : 'there';
+    $('panel-name').textContent = user ? user.name : 'Guest';
+    $('panel-id').textContent = user ? user.visitorId : 'Not signed in';
+    if (user){
+      fillSelect($('account-type-select'), typeOptions, user.accountType);
+      fillSelect($('account-select'), accountOptions(user.accountType), user.accountId);
+    }
+  }
+
+  function renderCards(){
+    const grid = $('card-grid');
+    CARDS.forEach(c => { const el = document.createElement('eb-resource-card'); el._card = c; grid.appendChild(el); });
+  }
+
+  // ---- sign in ----
+  function openSignin(){
+    fillSelect($('f-type'), typeOptions, user && user.accountType);
+    fillSelect($('f-account'), accountOptions($('f-type').value), user && user.accountId);
+    $('f-name').value = user ? user.name : '';
+    $('f-role').value = user ? user.role : 'Internal';
+    $('f-preview').textContent = slug($('f-name').value);
+    $('signin').showModal();
+  }
+  $('f-name').addEventListener('input', e => $('f-preview').textContent = slug(e.target.value));
+  $('f-type').addEventListener('change', e => fillSelect($('f-account'), accountOptions(e.target.value)));
+  $('signin').addEventListener('cancel', e => { if (!user) e.preventDefault(); });
+  $('signin-form').addEventListener('submit', () => {
+    const name = $('f-name').value.trim();
+    user = { name, visitorId:slug(name), role:$('f-role').value, accountType:$('f-type').value, accountId:$('f-account').value };
+    store.set(user); renderUser(); syncPendo();
+    toast('Signed in as ' + user.visitorId);
+  });
+
+  // ---- hero account switcher ----
+  $('account-type-select').addEventListener('change', e => {
+    fillSelect($('account-select'), accountOptions(e.target.value));
+    $('account-select').dispatchEvent(new Event('change'));
+  });
+  $('account-select').addEventListener('change', () => {
+    user.accountType = $('account-type-select').value;
+    user.accountId = $('account-select').value;
+    store.set(user); syncPendo();
+    const acct = findAccount(user.accountType, user.accountId);
+    if (typeof window.handleAccountSwitch === 'function') window.handleAccountSwitch(user.accountType, acct);
+    toast('Switched to ' + acct.name);
+  });
+
+  // ---- nav ----
+  $('menu-toggle').addEventListener('click', () => {
+    const l = $('layout');
+    if (window.matchMedia('(max-width:820px)').matches) l.classList.toggle('mobile-open');
+    else l.classList.toggle('collapsed');
+  });
+  $('account-toggle').addEventListener('click', e => {
+    e.stopPropagation();
+    const open = $('account-panel').classList.toggle('open');
+    $('account-toggle').setAttribute('aria-expanded', open);
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.account')) $('account-panel').classList.remove('open'); });
+  $('manage-profile').addEventListener('click', () => { $('account-panel').classList.remove('open'); openSignin(); });
+  $('edit-profile').addEventListener('click', openSignin);
+  $('log-out').addEventListener('click', () => {
+    store.clear();
+    if (window.pendo && typeof window.pendo.clearSession === 'function') window.pendo.clearSession();
+    location.hash = ''; location.reload();
+  });
+
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#','');
+    if (h && h !== 'home') toast('In-app page: ' + h.replace(/-/g,' '));
+  });
+
+  // ---- boot ----
+  renderCards();
+  renderUser();
+  syncPendo();              // anonymous until the sign-in form is submitted
+  if (!user) openSignin();
+</script>
+
+<!-- =====================================================================
+     3. TRACK EVENT PRACTICE ZONE  <-- edit this block
+     Every "Read more" button sits inside TWO shadow DOM layers
+     (<eb-resource-card> > <eb-button> > <button>), like the Salesforce
+     LWC cards on a client site. Pendo feature tagging can't reliably
+     reach the card title there, so these handlers send track events.
+
+     Tips
+     - Use event.currentTarget, not event.target, to read data-* attributes.
+     - Keep property values short. Long URLs blow past Pendo's size limit.
+     - Watch the console: balboaTrack() logs each payload and its byte size.
+     ===================================================================== -->
+<script>
+  function handleReadMore(event){
+    const el = event.currentTarget;                 // <eb-button> carrying the data-* attributes
+    const { cardTitle, link, linkType } = el.dataset;
+
+    balboaTrack('Home Read More Click', {
+      cardTitle: (cardTitle || '').trim().slice(0, 200),
+      linkType: linkType || '',
+      sourcePage: 'Home'
+      // EXERCISE: add  destinationPath: link  then click "Become a Balboa partner"
+      // to reproduce the "event properties JSON too large" error.
+    });
+
+    // navigation (same as a client app would do)
+    if (linkType === 'Link outside of app') window.open(link, '_blank', 'noopener');
+    else location.hash = link;
+  }
+
+  function handleAccountSwitch(accountType, account){
+    balboaTrack('Account Switched', { accountType: accountType, accountName: account.name });
+  }
+</script>
+</body>
+</html>
